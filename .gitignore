@@ -135,3 +135,7 @@ config/config.env
 docker-compose.dev.yml
 
 mongodb/
+.vscode/
+/Users/aleksandrmishin/Python/Chat_gpt_telegram_bot/chatgpt_telegram_bot/bot/config.py
+venv/
+/Users/aleksandrmishin/Python/Chat_gpt_telegram_bot/chatgpt_telegram_bot/.gitignore
