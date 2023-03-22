@@ -39,11 +39,11 @@ db = database.Database()
 logger = logging.getLogger(__name__)
 user_semaphores = {}
 
-HELP_MESSAGE = """Commands:
-⚪ /retry – Regenerate last bot answer
-⚪ /new – Start new dialog
-⚪ /mode – Select chat mode
-⚪ /help – Show help
+HELP_MESSAGE = """Команды:
+⚪ /retry – Сгенерировать новый ответ на последнее сообщение
+⚪ /new – Начать новый диалог
+⚪ /mode – Выбрать роль
+⚪ /help – Показать помощь
 """
 
 
@@ -77,10 +77,10 @@ async def start_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
     db.start_new_dialog(user_id)
     
-    reply_text = "Hi! I'm <b>ChatGPT</b> bot implemented with GPT-3.5 OpenAI API 🤖\n\n"
+    reply_text = "Привет, я <b>ChatGPT</b> бот. Работаю на технологии GPT-3.5 OpenAI 🤖\n\n"
     reply_text += HELP_MESSAGE
 
-    reply_text += "\nAnd now... ask me anything!"
+    reply_text += "\nА теперь, спроси меня о чем угодно!"
     
     await update.message.reply_text(reply_text, parse_mode=ParseMode.HTML)
 
@@ -101,7 +101,7 @@ async def retry_handle(update: Update, context: CallbackContext):
 
     dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
     if len(dialog_messages) == 0:
-        await update.message.reply_text("No message to retry 🤷‍♂️")
+        await update.message.reply_text("Нет сообщения для повтора 🤷‍♂️")
         return
 
     last_dialog_message = dialog_messages.pop()
@@ -127,7 +127,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         if use_new_dialog_timeout:
             if (datetime.now() - db.get_user_attribute(user_id, "last_interaction")).seconds > config.new_dialog_timeout and len(db.get_dialog_messages(user_id)) > 0:
                 db.start_new_dialog(user_id)
-                await update.message.reply_text(f"Starting new dialog due to timeout (<b>{openai_utils.CHAT_MODES[chat_mode]['name']}</b> mode) ✅", parse_mode=ParseMode.HTML)
+                await update.message.reply_text(f"Начал новый диалог по таймауту. Роль: (<b>{openai_utils.CHAT_MODES[chat_mode]['name']}</b>) ✅", parse_mode=ParseMode.HTML)
         db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
         # send typing action
@@ -208,7 +208,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
 
             db.set_user_attribute(user_id, "n_used_tokens", n_used_tokens + db.get_user_attribute(user_id, "n_used_tokens"))
         except Exception as e:
-            error_text = f"Something went wrong during completion. Reason: {e}"
+            error_text = f"Что-то пошло не так. Причина: {e}"
             logger.error(error_text)
             await update.message.reply_text(error_text)
             return
@@ -216,9 +216,9 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         # send message if some messages were removed from the context
         if n_first_dialog_messages_removed > 0:
             if n_first_dialog_messages_removed == 1:
-                text = "✍️ <i>Note:</i> Your current dialog is too long, so your <b>first message</b> was removed from the context.\n Send /new command to start new dialog"
+                text = "✍️ <i>Note:</i> Ваш текущий диалог слишком длинный. Поэтому я удалил <b>первое сообщение</b> из контекста.\n Если нужно начать новый диалог, отправь команду /new"
             else:
-                text = f"✍️ <i>Note:</i> Your current dialog is too long, so <b>{n_first_dialog_messages_removed} first messages</b> were removed from the context.\n Send /new command to start new dialog"
+                text = f"✍️ <i>Note:</i> Ваш текущий диалог слишком длинный. Поэтому я удалил <b>{n_first_dialog_messages_removed} первых сообщения</b> из контекста.\n Если нужно начать новый диалог, отправь команду /new"
             await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
@@ -227,7 +227,7 @@ async def is_previous_message_not_answered_yet(update: Update, context: Callback
 
     user_id = update.message.from_user.id
     if user_semaphores[user_id].locked():
-        text = "⏳ Please <b>wait</b> for a reply to the previous message"
+        text = "⏳ Пожалуйста <b>подождите</b>. Я еще не ответил на предыдущее сообщение."
         await update.message.reply_text(text, reply_to_message_id=update.message.id, parse_mode=ParseMode.HTML)
         return True
     else:
@@ -280,7 +280,7 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     db.start_new_dialog(user_id)
-    await update.message.reply_text("Starting new dialog ✅")
+    await update.message.reply_text("Начал новый диалог ✅")
 
     chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
     await update.message.reply_text(f"{openai_utils.CHAT_MODES[chat_mode]['welcome_message']}", parse_mode=ParseMode.HTML)
@@ -298,7 +298,7 @@ async def show_chat_modes_handle(update: Update, context: CallbackContext):
         keyboard.append([InlineKeyboardButton(chat_mode_dict["name"], callback_data=f"set_chat_mode|{chat_mode}")])
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text("Select chat mode:", reply_markup=reply_markup)
+    await update.message.reply_text("Выбери новую роль:", reply_markup=reply_markup)
 
 
 async def set_chat_mode_handle(update: Update, context: CallbackContext):
@@ -369,11 +369,11 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
 
 async def post_init(application: Application):
     await application.bot.set_my_commands([
-        BotCommand("/new", "Start new dialog"),
-        BotCommand("/mode", "Select chat mode"),
-        BotCommand("/retry", "Re-generate response for previous query"),
+        BotCommand("/new", "Начать новый диалог"),
+        BotCommand("/mode", "Выбрать роль"),
+        BotCommand("/retry", "Сгенерировать новый ответ на последнее сообщение"),
 #        BotCommand("/balance", "Show balance"),
-        BotCommand("/help", "Show help message"),
+        BotCommand("/help", "Показать помощь"),
     ])
 
 def run_bot() -> None:
