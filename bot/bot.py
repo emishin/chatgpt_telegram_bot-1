@@ -44,6 +44,9 @@ HELP_MESSAGE = """Команды:
 ⚪ /new – Начать новый диалог
 ⚪ /mode – Выбрать роль
 ⚪ /help – Показать помощь
+
+⚪ Вопросы и пожелания по доработкам отправляйте <a href="https://airtable.com/shrUOAEwOiWGRDagg" rel="noopener noreferrer">в эту форму</a>
+
 """
 
 
